@@ -192,10 +192,32 @@
   $('#help').onclick=()=>$('#guide').showModal();$('#close-guide').onclick=()=>$('#guide').close();$('#guide-done').onclick=()=>{$('#guide').close();$('#circumference').focus()};$('#guide').onclick=e=>{if(e.target===$('#guide')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}};
   sizeButtons();caseButtons();update();
   try{
-    if(!window.THREE)throw new Error('라이브러리를 불러오지 못했습니다.');
-    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
-    $('#viewport').append(renderer.domElement);$('#loading').hidden=true;
-  }catch(e){$('#loading').textContent='3D 화면을 열 수 없습니다. WebGL을 지원하는 브라우저에서 다시 열어 주세요. 모델 치수와 비율은 아래에서 확인할 수 있습니다.';return}
+    if(!window.THREE)throw new Error('Three.js 라이브러리(three.min.js)를 불러오지 못했습니다.');
+    try{
+      renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+    }catch(err1){
+      try{
+        renderer=new THREE.WebGLRenderer({alpha:true});
+      }catch(err2){
+        if(THREE.WebGL1Renderer){
+          renderer=new THREE.WebGL1Renderer({alpha:true});
+        }else{
+          throw err1;
+        }
+      }
+    }
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setClearColor(0x000000,0);
+    if(THREE.SRGBColorSpace)renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.25;
+    $('#viewport').append(renderer.domElement);
+    $('#loading').hidden=true;
+  }catch(e){
+    console.error('3D Init failed:', e);
+    $('#loading').innerHTML=`<div style="padding:16px;text-align:center;line-height:1.5;"><p style="font-weight:600;color:#e53e3e;margin-bottom:6px;">3D 화면 초기화 실패</p><p style="font-size:12px;color:#555;word-break:break-all;margin-bottom:10px;">${e&&(e.message||e)}</p><p style="font-size:11px;color:#888;">(F12 개발자 도구의 Console 탭에서 상세 로그를 확인할 수 있습니다)</p></div>`;
+    return;
+  }
   const T=THREE;
   const orientation=new T.Quaternion();
   const handTemplate=WatchHand.createTemplate(T);
